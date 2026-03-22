@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Upload, Search, Scale } from 'lucide-react';
 import { JDInput, JDParsedResult, SkillGapAnalysis, GeneratedResumePreview } from '../components/ai';
@@ -16,8 +16,15 @@ type Step = 'input' | 'parsed' | 'generating' | 'generated';
 export function AIAssistantPage() {
   const navigate = useNavigate();
   const { database } = useDatabaseStore();
-  const { getActiveProvider } = useAIStore();
+  const { getActiveProvider, init, isInitialized } = useAIStore();
   const aiService = useAIService();
+
+  // 初始化 AI Store
+  useEffect(() => {
+    if (!isInitialized) {
+      init();
+    }
+  }, [isInitialized, init]);
 
   const [activeTab, setActiveTab] = useState<Tab>('jd');
   const [step, setStep] = useState<Step>('input');

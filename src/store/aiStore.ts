@@ -34,7 +34,7 @@ async function initDB(): Promise<IDBPDatabase<AIConfigDB>> {
   return openDB<AIConfigDB>(DB_NAME, DB_VERSION, {
     upgrade(db) {
       if (!db.objectStoreNames.contains('ai-config')) {
-        db.createObjectStore('ai-config');
+        db.createObjectStore('ai-config', { keyPath: 'id' });
       }
     },
   });
@@ -71,7 +71,7 @@ async function loadConfig<T>(key: string): Promise<T | null> {
 async function saveConfig<T>(key: string, data: T): Promise<void> {
   try {
     const db = await initDB();
-    await db.put('ai-config', { id: key, data }, key);
+    await db.put('ai-config', { id: key, data });
   } catch (error) {
     console.error(`Failed to save ${key}:`, error);
   }
