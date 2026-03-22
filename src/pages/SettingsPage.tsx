@@ -902,24 +902,29 @@ function HelpTab() {
                   </thead>
                   <tbody>
                     <tr className="border-b">
-                      <td className="py-1">4-6GB</td>
-                      <td>Qwen2.5 3B</td>
-                      <td><code className="bg-gray-200 px-1 rounded text-xs">ollama pull qwen2.5:3b</code></td>
+                      <td className="py-1">4GB</td>
+                      <td>Qwen3.5 0.8B</td>
+                      <td><code className="bg-gray-200 px-1 rounded text-xs">ollama pull qwen3.5:0.8b</code></td>
                     </tr>
                     <tr className="border-b">
-                      <td className="py-1">8GB</td>
-                      <td>Qwen2.5 7B</td>
-                      <td><code className="bg-gray-200 px-1 rounded text-xs">ollama pull qwen2.5:7b</code></td>
+                      <td className="py-1">6GB</td>
+                      <td>Qwen3.5 2B</td>
+                      <td><code className="bg-gray-200 px-1 rounded text-xs">ollama pull qwen3.5:2b</code></td>
                     </tr>
                     <tr className="border-b">
-                      <td className="py-1">12-16GB</td>
-                      <td>Qwen2.5 14B</td>
-                      <td><code className="bg-gray-200 px-1 rounded text-xs">ollama pull qwen2.5:14b</code></td>
+                      <td className="py-1">8GB ⭐</td>
+                      <td>Qwen3.5 4B</td>
+                      <td><code className="bg-gray-200 px-1 rounded text-xs">ollama pull qwen3.5:4b</code></td>
+                    </tr>
+                    <tr className="border-b">
+                      <td className="py-1">12GB</td>
+                      <td>Qwen3.5 9B</td>
+                      <td><code className="bg-gray-200 px-1 rounded text-xs">ollama pull qwen3.5:9b</code></td>
                     </tr>
                     <tr>
                       <td className="py-1">24GB+</td>
-                      <td>Qwen2.5 32B</td>
-                      <td><code className="bg-gray-200 px-1 rounded text-xs">ollama pull qwen2.5:32b</code></td>
+                      <td>Qwen3.5 27B</td>
+                      <td><code className="bg-gray-200 px-1 rounded text-xs">ollama pull qwen3.5:27b</code></td>
                     </tr>
                   </tbody>
                 </table>
@@ -938,12 +943,12 @@ function HelpTab() {
 
           <section>
             <h3 className="text-lg font-semibold text-gray-800 mb-3">🍎 Apple Silicon Mac 特别说明</h3>
-            <p className="text-gray-600">M1/M2/M3 系列芯片有统一内存架构，可直接使用内存运行大模型：</p>
+            <p className="text-gray-600">M1/M2/M3/M4 系列芯片有统一内存架构，可直接使用内存运行大模型：</p>
             <ul className="mt-2 space-y-1 text-gray-600">
-              <li>• 8GB 内存：建议 3B 模型</li>
-              <li>• 16GB 内存：建议 7B 模型</li>
-              <li>• 32GB 内存：可运行 14B 模型</li>
-              <li>• 64GB+ 内存：可运行 32B+ 模型</li>
+              <li>• 8GB 内存：建议 Qwen3.5 2B</li>
+              <li>• 16GB 内存：建议 Qwen3.5 4B</li>
+              <li>• 32GB 内存：可运行 Qwen3.5 9B</li>
+              <li>• 64GB+ 内存：可运行 Qwen3.5 27B</li>
             </ul>
           </section>
 

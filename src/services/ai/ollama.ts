@@ -11,7 +11,7 @@ export class OllamaProvider extends BaseProvider {
 
   constructor(apiKey: string = 'ollama', baseUrl?: string, model?: string) {
     super(apiKey || 'ollama', baseUrl || PROVIDERS.ollama.defaultBaseUrl);
-    this.selectedModel = model || 'qwen2.5:7b';
+    this.selectedModel = model || 'qwen3.5:4b';
   }
 
   setModel(model: string) {
