@@ -20,7 +20,7 @@ interface AIConfigDB extends DBSchema {
 }
 
 const DB_NAME = 'resume-ai-config';
-const DB_VERSION = 1;
+const DB_VERSION = 2;  // 升级版本号，强制重建数据库
 const KEYS = {
   providers: 'providers',
   history: 'history',
