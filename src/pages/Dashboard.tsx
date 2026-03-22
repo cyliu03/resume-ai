@@ -19,6 +19,58 @@ import { WelcomeCard, shouldShowWelcomeCard } from '../components/WelcomeGuide';
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
+// AI 快速配置卡片
+function AIQuickSetupCard() {
+  return (
+    <div className="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl p-6 text-white relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+      
+      <div className="relative z-10">
+        <h3 className="text-xl font-bold mb-2">🚀 快速配置 AI</h3>
+        <p className="text-purple-100 mb-4">
+          使用 Gemini 免费额度，即刻体验 AI 功能
+        </p>
+
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 text-sm">
+            <span className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">1</span>
+            <span>访问 Google AI Studio 获取免费 API Key</span>
+          </div>
+          <div className="flex items-center gap-3 text-sm">
+            <span className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">2</span>
+            <span>在设置中添加「Google AI」提供商</span>
+          </div>
+          <div className="flex items-center gap-3 text-sm">
+            <span className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">3</span>
+            <span>开始使用 AI 简历生成、JD 分析等功能</span>
+          </div>
+        </div>
+
+        <div className="flex gap-3 mt-6">
+          <a
+            href="https://aistudio.google.com/app/apikey"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2 bg-white text-purple-600 rounded-lg hover:bg-purple-50 transition-colors font-medium"
+          >
+            获取 Gemini API Key
+          </a>
+          <Link
+            to="/settings"
+            className="px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors"
+          >
+            前往设置
+          </Link>
+        </div>
+
+        <p className="text-xs text-purple-200 mt-4">
+          💡 Gemini 提供每日 1500 次免费请求，足够日常使用
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function Dashboard() {
   const { database } = useDatabaseStore();
   const { getActiveProvider } = useAIStore();
@@ -142,16 +194,8 @@ export function Dashboard() {
 
           {/* AI 提示 */}
           {!hasAIConfigured && (
-            <div className="mt-8 p-4 bg-amber-50 rounded-lg border border-amber-200 max-w-xl mx-auto">
-              <div className="flex items-start gap-3">
-                <span className="text-xl">💡</span>
-                <div className="text-sm text-amber-800">
-                  <span className="font-medium">提示：</span>
-                  导入简历需要 AI 功能。请先
-                  <Link to="/settings" className="underline hover:text-amber-900 font-medium">配置 AI API Key</Link>
-                  （推荐使用 Gemini 免费额度）
-                </div>
-              </div>
+            <div className="mt-8 max-w-xl mx-auto">
+              <AIQuickSetupCard />
             </div>
           )}
         </div>
@@ -191,6 +235,11 @@ export function Dashboard() {
       {/* 欢迎卡片 */}
       {showWelcomeCard && (
         <WelcomeCard onDismiss={() => setShowWelcomeCard(false)} />
+      )}
+
+      {/* AI 快速配置提示 */}
+      {!hasAIConfigured && (
+        <AIQuickSetupCard />
       )}
 
       {/* 页面标题 */}
