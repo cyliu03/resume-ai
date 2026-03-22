@@ -16,7 +16,7 @@ type Step = 'input' | 'parsed' | 'generating' | 'generated';
 export function AIAssistantPage() {
   const navigate = useNavigate();
   const { database } = useDatabaseStore();
-  const { getActiveProvider, init, isInitialized } = useAIStore();
+  const { getActiveProvider, init, isInitialized, providers } = useAIStore();
   const aiService = useAIService();
 
   // 初始化 AI Store
@@ -25,6 +25,9 @@ export function AIAssistantPage() {
       init();
     }
   }, [isInitialized, init]);
+
+  // 检查 AI 是否已配置
+  const hasAIConfig = isInitialized && providers.length > 0;
 
   const [activeTab, setActiveTab] = useState<Tab>('jd');
   const [step, setStep] = useState<Step>('input');
@@ -36,13 +39,17 @@ export function AIAssistantPage() {
 
   // 检查 AI 配置
   const checkAIConfig = useCallback(() => {
+    if (!hasAIConfig) {
+      setError('请先在设置页面配置 AI API Key');
+      return false;
+    }
     const activeProvider = getActiveProvider();
     if (!activeProvider) {
       setError('请先在设置页面配置 AI API Key');
       return false;
     }
     return true;
-  }, [getActiveProvider]);
+  }, [hasAIConfig, getActiveProvider]);
 
   // 解析 JD
   const handleParseJD = useCallback(async (jdText: string) => {
