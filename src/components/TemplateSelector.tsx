@@ -4,16 +4,16 @@ import { useResume } from '../context/ResumeContext';
 import type { TemplateType } from '../types/resume';
 
 const templates: { id: TemplateType; name: string; description: string; category: string }[] = [
+  { id: 'pro', name: '专业', description: '双栏设计，深色侧边栏', category: '推荐' },
   { id: 'elegant', name: '优雅', description: '精美现代，时间线设计', category: '推荐' },
   { id: 'modern', name: '现代', description: '简洁现代，适合技术岗位', category: '推荐' },
   { id: 'classic', name: '经典', description: '传统正式，适合各行各业', category: '推荐' },
-  { id: 'minimal', name: '简约', description: '极简风格，突出内容本身', category: '推荐' },
-  { id: 'professional', name: '专业', description: '商务专业，适合企业求职', category: '商务' },
+  { id: 'minimal', name: '简约', description: '极简风格，突出内容本身', category: '简约' },
+  { id: 'professional', name: '商务', description: '商务专业，适合企业求职', category: '商务' },
   { id: 'tech', name: '技术', description: '技术导向，突出技能项目', category: '技术' },
   { id: 'executive', name: '高管', description: '高端大气，适合管理岗位', category: '管理' },
   { id: 'academic', name: '学术', description: '学术风格，适合科研教育', category: '学术' },
   { id: 'creative', name: '创意', description: '创意设计，适合设计岗位', category: '创意' },
-  { id: 'colorful', name: '活力', description: '活泼多彩，适合年轻求职者', category: '创意' },
 ];
 
 export function TemplateSelector() {
