@@ -568,7 +568,8 @@ function ProviderModal({
   } | null>(null);
 
   const handleSubmit = () => {
-    if (!formData.apiKey.trim()) {
+    // Ollama 不需要 API Key
+    if (formData.provider !== 'ollama' && !formData.apiKey.trim()) {
       alert('请输入 API Key');
       return;
     }
@@ -628,37 +629,44 @@ function ProviderModal({
           </div>
 
           {/* API Key */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              API Key
-            </label>
-            <input
-              type="password"
-              value={formData.apiKey}
-              onChange={(e) =>
-                setFormData({ ...formData, apiKey: e.target.value })
-              }
-              placeholder={
-                formData.provider === 'ollama'
-                  ? 'Ollama 无需 API Key'
-                  : '请输入 API Key'
-              }
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-            {selectedProvider && selectedProvider.website && (
-              <p className="text-xs text-gray-500 mt-1">
-                获取 API Key：
-                <a
-                  href={selectedProvider.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline ml-1"
-                >
-                  {selectedProvider.website}
-                </a>
+          {formData.provider !== 'ollama' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                API Key
+              </label>
+              <input
+                type="password"
+                value={formData.apiKey}
+                onChange={(e) =>
+                  setFormData({ ...formData, apiKey: e.target.value })
+                }
+                placeholder="请输入 API Key"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              {selectedProvider && selectedProvider.website && (
+                <p className="text-xs text-gray-500 mt-1">
+                  获取 API Key：
+                  <a
+                    href={selectedProvider.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline ml-1"
+                  >
+                    {selectedProvider.website}
+                  </a>
+                </p>
+              )}
+            </div>
+          )}
+          
+          {/* Ollama 提示 */}
+          {formData.provider === 'ollama' && (
+            <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+              <p className="text-sm text-green-800">
+                ✅ Ollama 无需 API Key，本地运行即可使用
               </p>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Base URL */}
           <div>
@@ -852,6 +860,17 @@ function HelpTab() {
       {activeSection === 'ollama' && (
         <div className="bg-white rounded-lg border border-gray-200 p-6 space-y-6">
           <h2 className="text-xl font-bold text-gray-800">🦙 Ollama 本地部署配置指南</h2>
+          
+          {/* 重要提示 */}
+          <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+            <p className="font-medium text-amber-800">⚠️ 重要提示</p>
+            <p className="text-sm text-amber-700 mt-1">
+              在线 Demo（vercel.app）无法连接本地 Ollama，因为浏览器安全限制阻止 HTTPS 页面访问 HTTP 的 localhost。
+            </p>
+            <p className="text-sm text-amber-700 mt-1">
+              如需使用 Ollama，请在本地运行项目：<code className="bg-amber-100 px-1 rounded">npm run dev</code>
+            </p>
+          </div>
           
           <section>
             <h3 className="text-lg font-semibold text-gray-800 mb-3">为什么使用 Ollama？</h3>
