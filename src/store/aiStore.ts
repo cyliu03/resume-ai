@@ -71,7 +71,7 @@ async function loadConfig<T>(key: string): Promise<T | null> {
 async function saveConfig<T>(key: string, data: T): Promise<void> {
   try {
     const db = await initDB();
-    await db.put('ai-config', { id: key, data });
+    await db.put('ai-config', { id: key, data }, key);
   } catch (error) {
     console.error(`Failed to save ${key}:`, error);
   }
