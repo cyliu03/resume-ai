@@ -31,13 +31,22 @@ const KEYS = {
 
 // 初始化 IndexedDB
 async function initDB(): Promise<IDBPDatabase<AIConfigDB>> {
+  // 强制删除旧数据库，解决结构不兼容问题
+  if (typeof indexedDB !== 'undefined') {
+    const databases = await indexedDB.databases?.() || [];
+    const oldDb = databases.find(db => db.name === DB_NAME);
+    if (oldDb) {
+      await new Promise<void>((resolve) => {
+        const request = indexedDB.deleteDatabase(DB_NAME);
+        request.onsuccess = () => resolve();
+        request.onerror = () => resolve();
+        request.onblocked = () => resolve();
+      });
+    }
+  }
+  
   return openDB<AIConfigDB>(DB_NAME, DB_VERSION, {
-    upgrade(db, oldVersion) {
-      // 删除旧版本的 object store（解决结构不兼容问题）
-      if (oldVersion < 2 && db.objectStoreNames.contains('ai-config')) {
-        db.deleteObjectStore('ai-config');
-      }
-      // 创建新的 object store，使用 keyPath
+    upgrade(db) {
       if (!db.objectStoreNames.contains('ai-config')) {
         db.createObjectStore('ai-config', { keyPath: 'id' });
       }
