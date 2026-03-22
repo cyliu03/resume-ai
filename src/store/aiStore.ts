@@ -32,7 +32,12 @@ const KEYS = {
 // 初始化 IndexedDB
 async function initDB(): Promise<IDBPDatabase<AIConfigDB>> {
   return openDB<AIConfigDB>(DB_NAME, DB_VERSION, {
-    upgrade(db) {
+    upgrade(db, oldVersion) {
+      // 删除旧版本的 object store（解决结构不兼容问题）
+      if (oldVersion < 2 && db.objectStoreNames.contains('ai-config')) {
+        db.deleteObjectStore('ai-config');
+      }
+      // 创建新的 object store，使用 keyPath
       if (!db.objectStoreNames.contains('ai-config')) {
         db.createObjectStore('ai-config', { keyPath: 'id' });
       }
