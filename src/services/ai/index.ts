@@ -18,7 +18,7 @@ import { OllamaProvider } from './ollama';
 
 // 创建提供商实例的工厂函数
 export function createProvider(config: APIKeyConfig): AIProvider | null {
-  const { provider, apiKey, baseUrl } = config;
+  const { provider, apiKey, baseUrl, model } = config;
 
   switch (provider) {
     case 'openai':
@@ -30,7 +30,7 @@ export function createProvider(config: APIKeyConfig): AIProvider | null {
     case 'deepseek':
       return new DeepSeekProvider(apiKey, baseUrl);
     case 'alibaba':
-      return new AlibabaProvider(apiKey, baseUrl);
+      return new AlibabaProvider(apiKey, baseUrl, model);
     case 'ollama':
       return new OllamaProvider(apiKey, baseUrl);
     case 'baidu':

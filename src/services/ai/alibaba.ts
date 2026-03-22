@@ -2,20 +2,42 @@ import { BaseProvider, AIProviderError } from './base';
 import type { ChatMessage, GenerateOptions, GenerateResult, AIModelConfig } from '../../types/ai';
 import { PROVIDERS } from '../../types/ai';
 
+// Coding Plan 支持的模型
+const CODING_PLAN_MODELS: AIModelConfig[] = [
+  { id: 'qwen3.5-plus', name: 'Qwen 3.5 Plus (推荐)', provider: 'alibaba', maxTokens: 128000, supports: ['chat'] },
+  { id: 'qwen3-coder-plus', name: 'Qwen 3 Coder Plus', provider: 'alibaba', maxTokens: 128000, supports: ['chat'] },
+  { id: 'qwen3-coder-next', name: 'Qwen 3 Coder Next', provider: 'alibaba', maxTokens: 128000, supports: ['chat'] },
+  { id: 'qwen3-max-2026-01-23', name: 'Qwen 3 Max', provider: 'alibaba', maxTokens: 32000, supports: ['chat'] },
+  { id: 'glm-5', name: 'GLM 5', provider: 'alibaba', maxTokens: 128000, supports: ['chat'] },
+  { id: 'kimi-k2.5', name: 'Kimi K2.5', provider: 'alibaba', maxTokens: 128000, supports: ['chat'] },
+];
+
 // 通义千问使用 OpenAI 兼容接口
 export class AlibabaProvider extends BaseProvider {
   name = '通义千问';
   type = 'alibaba' as const;
   models: AIModelConfig[] = PROVIDERS.alibaba.models;
+  selectedModel?: string;
 
-  constructor(apiKey: string, baseUrl?: string) {
+  constructor(apiKey: string, baseUrl?: string, model?: string) {
     super(apiKey, baseUrl || PROVIDERS.alibaba.defaultBaseUrl);
+    this.selectedModel = model;
+  }
+
+  // 获取可用模型列表
+  getAvailableModels(): AIModelConfig[] {
+    const isCodingPlan = this.baseUrl.includes('coding.dashscope');
+    return isCodingPlan ? CODING_PLAN_MODELS : this.models;
   }
 
   async chat(messages: ChatMessage[], options?: GenerateOptions): Promise<GenerateResult> {
-    // Coding Plan 需要使用 qwen3-coder-plus，普通通义千问使用 qwen-plus
+    // 优先使用用户选择的模型，否则根据 Base URL 自动选择
     const isCodingPlan = this.baseUrl.includes('coding.dashscope');
-    const model = isCodingPlan ? 'qwen3-coder-plus' : 'qwen-plus';
+    let model = this.selectedModel;
+    
+    if (!model) {
+      model = isCodingPlan ? 'qwen3.5-plus' : 'qwen-plus';
+    }
 
     try {
       const response = await fetch(`${this.baseUrl}/chat/completions`, {

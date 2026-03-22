@@ -71,6 +71,7 @@ export interface APIKeyConfig {
   provider: AIProviderType;
   apiKey: string;
   baseUrl?: string;
+  model?: string;  // 用户选择的模型
   isActive: boolean;
   createdAt: string;
   lastUsed?: string;

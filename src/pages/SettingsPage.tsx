@@ -552,11 +552,13 @@ function ProviderModal({
     provider: AIProviderType;
     apiKey: string;
     baseUrl: string;
+    model: string;
     isActive: boolean;
   }>({
     provider: provider?.provider || 'openai',
     apiKey: provider?.apiKey || '',
     baseUrl: provider?.baseUrl || PROVIDERS[provider?.provider || 'openai']?.defaultBaseUrl || '',
+    model: provider?.model || '',
     isActive: provider?.isActive ?? true,
   });
 
@@ -566,6 +568,40 @@ function ProviderModal({
     message: string;
     model?: string;
   } | null>(null);
+
+  // 获取当前提供商的可用模型
+  const getAvailableModels = () => {
+    const p = formData.provider;
+    const isCodingPlan = formData.baseUrl?.includes('coding.dashscope');
+    
+    // Coding Plan 特殊模型列表
+    if (p === 'alibaba' && isCodingPlan) {
+      return [
+        { id: 'qwen3.5-plus', name: 'Qwen 3.5 Plus (推荐)' },
+        { id: 'qwen3-coder-plus', name: 'Qwen 3 Coder Plus' },
+        { id: 'qwen3-coder-next', name: 'Qwen 3 Coder Next' },
+        { id: 'qwen3-max-2026-01-23', name: 'Qwen 3 Max' },
+        { id: 'glm-5', name: 'GLM 5' },
+        { id: 'kimi-k2.5', name: 'Kimi K2.5' },
+      ];
+    }
+    
+    // Ollama 模型
+    if (p === 'ollama') {
+      return [
+        { id: 'qwen3.5:4b', name: 'Qwen 3.5 4B (推荐)' },
+        { id: 'qwen3.5:9b', name: 'Qwen 3.5 9B' },
+        { id: 'qwen3.5:27b', name: 'Qwen 3.5 27B' },
+        { id: 'qwen3:8b', name: 'Qwen 3 8B' },
+        { id: 'deepseek-r1:8b', name: 'DeepSeek R1 8B' },
+        { id: 'llama3.1:8b', name: 'Llama 3.1 8B' },
+        { id: 'phi4-mini', name: 'Phi-4 Mini' },
+      ];
+    }
+    
+    // 其他提供商
+    return PROVIDERS[p]?.models?.map(m => ({ id: m.id, name: m.name })) || [];
+  };
 
   const handleSubmit = () => {
     // Ollama 不需要 API Key
@@ -683,6 +719,32 @@ function ProviderModal({
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
+
+          {/* 模型选择 */}
+          {getAvailableModels().length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                模型选择
+              </label>
+              <select
+                value={formData.model}
+                onChange={(e) =>
+                  setFormData({ ...formData, model: e.target.value })
+                }
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">自动选择（推荐）</option>
+                {getAvailableModels().map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                不选择时将自动使用最适合的模型
+              </p>
+            </div>
+          )}
 
           {/* 激活状态 */}
           <div className="flex items-center gap-2">
