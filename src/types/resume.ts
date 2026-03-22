@@ -54,7 +54,7 @@ export interface ResumeData {
   skills: Skill[];
 }
 
-export type TemplateType = 'modern' | 'classic' | 'minimal' | 'professional' | 'tech' | 'executive' | 'academic' | 'creative' | 'colorful';
+export type TemplateType = 'elegant' | 'modern' | 'classic' | 'minimal' | 'professional' | 'tech' | 'executive' | 'academic' | 'creative' | 'colorful';
 
 // 排版设置接口
 export interface LayoutSettings {

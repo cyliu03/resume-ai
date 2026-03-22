@@ -9,6 +9,7 @@ import { ExecutiveTemplate } from './templates/ExecutiveTemplate';
 import { AcademicTemplate } from './templates/AcademicTemplate';
 import { CreativeTemplate } from './templates/CreativeTemplate';
 import { ColorfulTemplate } from './templates/ColorfulTemplate';
+import { ElegantTemplate } from './templates/ElegantTemplate';
 
 interface ResumePreviewProps {
   className?: string;
@@ -36,6 +37,8 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(
     const renderTemplate = () => {
       const props = { data: resumeData, layoutSettings, sectionOrder };
       switch (selectedTemplate) {
+        case 'elegant':
+          return <ElegantTemplate {...props} />;
         case 'classic':
           return <ClassicTemplate {...props} />;
         case 'minimal':

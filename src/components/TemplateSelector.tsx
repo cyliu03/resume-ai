@@ -4,6 +4,7 @@ import { useResume } from '../context/ResumeContext';
 import type { TemplateType } from '../types/resume';
 
 const templates: { id: TemplateType; name: string; description: string; category: string }[] = [
+  { id: 'elegant', name: '优雅', description: '精美现代，时间线设计', category: '推荐' },
   { id: 'modern', name: '现代', description: '简洁现代，适合技术岗位', category: '推荐' },
   { id: 'classic', name: '经典', description: '传统正式，适合各行各业', category: '推荐' },
   { id: 'minimal', name: '简约', description: '极简风格，突出内容本身', category: '推荐' },
