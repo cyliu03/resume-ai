@@ -102,110 +102,145 @@ nvidia-smi
 
 #### macOS
 
-Apple Silicon 芯片（M1/M2/M3）使用统一内存：
+Apple Silicon 芯片（M1/M2/M3/M4）使用统一内存：
 
 ```bash
 system_profiler SPHardwareDataType | grep "Memory"
 ```
 
-### 步骤 2：根据显卡选择模型
+### 步骤 2：根据显存选择模型（2025 最新）
 
-| 显存大小 | 推荐模型参数量 | 模型示例 |
-|----------|----------------|----------|
-| **4GB** | 3B-4B | phi3:mini, gemma:2b |
-| **6GB** | 5B-7B | mistral:7b-q4, qwen2.5:7b-q4 |
-| **8GB** | 7B-9B | llama3.1:8b, qwen2.5:7b, mistral:7b |
-| **12GB** | 11B-14B | qwen2.5:14b, mistral-nemo:12b |
-| **16GB** | 14B-20B | qwen2.5:14b, command-r:35b-q4 |
-| **24GB+** | 30B-70B | llama3.1:70b-q4, qwen2.5:32b |
+> 💡 **量化说明**：Q4 = 4-bit 量化，节省 ~70% 显存，性能损失 <5%
 
-### 步骤 3：ResumeAI 推荐配置
+| 显存大小 | 推荐模型 | 备选模型 | 说明 |
+|----------|----------|----------|------|
+| **4GB** | `qwen3:0.6b` | `phi4:mini`, `gemma3:1b` | 入门级，适合快速任务 |
+| **6GB** | `qwen3:1.7b` | `llama3.2:3b`, `gemma3:4b` | 轻量级，日常可用 |
+| **8GB** | `qwen3:4b` | `llama3.1:8b`, `mistral:7b` | 主流推荐，性价比高 |
+| **10GB** | `qwen3:8b` | `qwen3.5:7b`, `deepseek-r1:8b` | 中端显卡，能力增强 |
+| **12GB** | `qwen3:8b` | `deepseek-r1:14b-q4`, `gemma3:12b` | 推荐配置，推理能力强 |
+| **16GB** | `qwen3:14b` | `deepseek-r1:14b`, `qwen3.5:14b` | 高端显卡，高质量输出 |
+| **24GB** | `qwen3:30b-q4` | `deepseek-r1:32b-q4`, `llama3.1:70b-q4` | 旗舰显卡，接近 GPT-4 |
+| **48GB+** | `qwen3:30b` | `deepseek-r1:70b-q4`, `llama3.1:70b` | 专业级，最佳性能 |
 
-#### 🎮 RTX 3060 / 4060 (8GB VRAM)
+### 步骤 3：ResumeAI 推荐配置（按显卡型号）
+
+#### 🎮 RTX 3050 / 4050 (6GB VRAM)
 
 ```yaml
-# 适合入门级显卡
-primary: "qwen2.5:7b"        # 中文理解
-reasoning: "mistral:7b"      # 推理分析
-generation: "llama3.1:8b"    # 内容生成
-fast: "phi3:mini"            # 快速任务
+# 入门级显卡 - 使用小模型
+primary: "qwen3:1.7b"       # 中文理解
+generation: "llama3.2:3b"   # 内容生成
+fast: "phi4:mini"           # 快速任务
+```
+
+#### 🎮 RTX 3060 / 4060 (8GB VRAM) ⭐ 推荐
+
+```yaml
+# 主流显卡 - 性价比之选
+primary: "qwen3:4b"         # 最新 Qwen3，中文能力强
+reasoning: "deepseek-r1:8b" # DeepSeek R1 推理能力强
+generation: "llama3.1:8b"   # 写作流畅
+fast: "gemma3:4b"           # 快速任务
 ```
 
 #### 🎮 RTX 3070 / 4070 (12GB VRAM)
 
 ```yaml
-# 适合中端显卡
-primary: "qwen2.5:14b"       # 更强的中文理解
-reasoning: "mistral-nemo:12b"
-generation: "llama3.1:8b"
-fast: "phi3:mini"
+# 中端显卡 - 能力增强
+primary: "qwen3:8b"         # 更强的中文理解
+reasoning: "deepseek-r1:14b-q4"  # 量化版，推理能力强
+generation: "qwen3:8b"
+fast: "phi4:mini"
 ```
 
 #### 🎮 RTX 3080 / 4080 (16GB VRAM)
 
 ```yaml
-# 适合高端显卡
-primary: "qwen2.5:14b"
-reasoning: "deepseek-r1:14b"
-generation: "qwen2.5:14b"
-vision: "llava:13b"          # 视觉模型
+# 高端显卡 - 高质量输出
+primary: "qwen3:14b"        # 高质量中文理解
+reasoning: "deepseek-r1:14b"     # 完整版推理
+generation: "qwen3.5:14b"   # 最新版生成
+vision: "llava:13b"         # 视觉模型（PDF/图片 OCR）
 ```
 
-#### 🎮 RTX 3090 / 4090 (24GB+ VRAM)
+#### 🎮 RTX 3090 / 4090 (24GB VRAM)
 
 ```yaml
-# 适合旗舰显卡
-primary: "qwen2.5:32b"
-reasoning: "deepseek-r1:32b"
-generation: "qwen2.5:32b"
+# 旗舰显卡 - 接近 GPT-4 性能
+primary: "qwen3:30b-q4"     # 大模型量化版
+reasoning: "deepseek-r1:32b-q4"  # 推理能力接近 GPT-4
+generation: "qwen3:30b-q4"
 vision: "llava:34b"
 ```
 
-#### 🍎 Apple Silicon (M1/M2/M3)
+#### 🍎 Apple Silicon (M1/M2/M3/M4)
 
-统一内存决定模型大小：
+统一内存决定模型大小，Metal 加速自动支持：
 
-| 统一内存 | 推荐模型 |
-|----------|----------|
-| 8GB | phi3:mini, gemma:2b |
-| 16GB | qwen2.5:7b, mistral:7b |
-| 32GB | qwen2.5:14b, llama3.1:8b |
-| 64GB+ | qwen2.5:32b, deepseek-r1:32b |
+| 统一内存 | 推荐模型 | 备选 |
+|----------|----------|------|
+| **8GB** | `qwen3:1.7b` | `phi4:mini`, `gemma3:4b` |
+| **16GB** | `qwen3:4b` | `llama3.1:8b`, `deepseek-r1:8b` |
+| **24GB** | `qwen3:8b` | `qwen3.5:7b`, `gemma3:12b` |
+| **32GB** | `qwen3:14b` | `deepseek-r1:14b` |
+| **48GB** | `qwen3:30b-q4` | `deepseek-r1:32b-q4` |
+| **64GB+** | `qwen3:30b` | `deepseek-r1:70b-q4` |
 
 ---
 
 ## 下载推荐模型
 
-### 基础模型（必装）
+### 🆕 2025 最新模型
 
 ```bash
-# 中文理解（推荐）
-ollama pull qwen2.5:7b
+# Qwen3 系列（推荐，中文最强）
+ollama pull qwen3:4b        # 8GB 显存推荐
+ollama pull qwen3:8b        # 12GB 显存推荐
+ollama pull qwen3:14b       # 16GB 显存推荐
 
-# 推理分析
-ollama pull mistral:7b
+# Qwen3.5 系列（最新，多模态）
+ollama pull qwen3.5:7b      # 支持文本+图片，256K 上下文
+ollama pull qwen3.5:14b
 
-# 内容生成
-ollama pull llama3.1:8b
+# DeepSeek R1 系列（推理最强）
+ollama pull deepseek-r1:8b  # 推理能力强
+ollama pull deepseek-r1:14b # 接近 GPT-4 推理能力
+ollama pull deepseek-r1:32b # 旗舰级推理
 
-# 快速任务
-ollama pull phi3:mini
+# Llama 3.1 系列（综合能力强）
+ollama pull llama3.1:8b     # 主流推荐
+ollama pull llama3.2:3b     # 轻量版
+
+# Gemma 3 系列（Google 最新）
+ollama pull gemma3:4b       # 适合写作
+ollama pull gemma3:12b      # 中等规模
+
+# 快速模型
+ollama pull phi4:mini       # 速度极快，质量不错
 ```
+
+### 按用途选择模型
+
+| 用途 | 推荐模型 | 原因 |
+|------|----------|------|
+| **简历解析** | `qwen3:4b` | 中文理解强，结构化输出好 |
+| **JD 分析** | `deepseek-r1:8b` | 推理能力强，匹配分析准确 |
+| **简历生成** | `qwen3.5:7b` | 写作流畅，支持多模态 |
+| **面试题生成** | `deepseek-r1:8b` | 推理能力强，问题深入 |
+| **快速分类** | `phi4:mini` | 速度极快，省显存 |
+| **PDF OCR** | `llava:13b` | 视觉模型，支持图片识别 |
 
 ### 视觉模型（可选，用于图片/PDF OCR）
 
 ```bash
-# 7B 版本（8GB 显存推荐）
-ollama pull llava:7b
+# LLaVA 系列（视觉理解）
+ollama pull llava:7b        # 8GB 显存
+ollama pull llava:13b       # 16GB 显存
+ollama pull llava:34b       # 24GB+ 显存
 
-# 13B 版本（16GB+ 显存）
-ollama pull llava:13b
-```
-
-### 嵌入模型（用于语义搜索）
-
-```bash
-ollama pull nomic-embed-text
+# Qwen2.5-VL（多模态）
+ollama pull qwen2.5-vl:7b   # 视觉+文本
 ```
 
 ### 查看已下载模型
@@ -217,10 +252,10 @@ ollama list
 输出示例：
 ```
 NAME                    ID              SIZE    MODIFIED
-qwen2.5:7b              ddsdfsdf        4.7 GB  2 hours ago
-mistral:7b              fdfsdfds        4.1 GB  2 hours ago
-llama3.1:8b             sdfdsfds        4.9 GB  2 hours ago
-phi3:mini               dsfdsfds        2.2 GB  2 hours ago
+qwen3:4b                ddsdfsdf        2.5 GB  2 hours ago
+deepseek-r1:8b          fdfsdfds        4.9 GB  1 day ago
+llama3.1:8b             sdfdsfds        4.9 GB  3 days ago
+phi4:mini               dsfdsfds        2.2 GB  1 week ago
 ```
 
 ### 删除不需要的模型
@@ -245,7 +280,7 @@ ollama rm 模型名称
 |------|-----|
 | 名称 | Ollama 本地 |
 | API 地址 | `http://localhost:11434` |
-| 默认模型 | `qwen2.5:7b` |
+| 默认模型 | `qwen3:4b` |
 
 6. 点击 **测试连接**
 7. 连接成功后，点击 **保存**
@@ -260,12 +295,12 @@ providers:
   - name: "Ollama 本地"
     type: "ollama"
     baseUrl: "http://localhost:11434"
-    defaultModel: "qwen2.5:7b"
+    defaultModel: "qwen3:4b"
     models:
-      - qwen2.5:7b
-      - mistral:7b
+      - qwen3:4b
+      - deepseek-r1:8b
       - llama3.1:8b
-      - phi3:mini
+      - phi4:mini
 ```
 
 ### 模型分配建议
@@ -274,11 +309,11 @@ providers:
 
 | 任务 | 推荐模型 | 原因 |
 |------|----------|------|
-| **简历解析** | qwen2.5:7b | 中文理解强，结构化输出好 |
-| **JD 分析** | mistral:7b | 推理能力强，英文理解好 |
-| **简历生成** | llama3.1:8b | 写作流畅，质量高 |
-| **面试题生成** | mistral:7b | 推理能力强 |
-| **快速分类** | phi3:mini | 速度极快 |
+| **简历解析** | `qwen3:4b` | 中文理解强，结构化输出好 |
+| **JD 分析** | `deepseek-r1:8b` | 推理能力强，匹配分析准确 |
+| **简历生成** | `qwen3.5:7b` | 写作流畅，质量高 |
+| **面试题生成** | `deepseek-r1:8b` | 推理能力强 |
+| **快速分类** | `phi4:mini` | 速度极快 |
 
 ---
 
@@ -288,7 +323,7 @@ providers:
 
 ```bash
 # 运行交互式对话
-ollama run qwen2.5:7b
+ollama run qwen3:4b
 
 # 输入测试问题
 >>> 你好，请用中文介绍一下你自己
@@ -299,7 +334,7 @@ ollama run qwen2.5:7b
 ```bash
 # 测试 Ollama API 是否正常
 curl http://localhost:11434/api/generate -d '{
-  "model": "qwen2.5:7b",
+  "model": "qwen3:4b",
   "prompt": "你好"
 }'
 ```
@@ -326,38 +361,37 @@ CUDA out of memory
 
 1. 使用更小的模型：
    ```bash
-   # 从 7B 换到 3B
-   ollama pull phi3:mini
+   # 从 4B 换到 1.7B
+   ollama pull qwen3:1.7b
    ```
 
-2. 使用量化版本：
+2. 使用量化版本（自动选择）：
    ```bash
-   # Q4 量化更省显存
-   ollama pull qwen2.5:7b-q4_0
+   # Ollama 默认使用 Q4 量化
+   ollama pull qwen3:4b-q4_K_M
    ```
 
-3. 减少 GPU 层数（让 CPU 分担）：
+3. 让 CPU 分担部分计算：
    ```bash
-   Ollama 会自动处理，但会变慢
+   # 设置环境变量，限制 GPU 层数
+   export OLLAMA_NUM_GPU=20
    ```
 
 ### Q2: 模型下载速度慢？
 
-**原因：** 模型文件很大（2-10GB）
-
 **解决方案：**
 
-1. 使用国内镜像（如果有）
-2. 等待下载完成
-3. 或使用更小的模型
+1. 使用镜像站（如果有）
+2. 先下载小模型测试：
+   ```bash
+   ollama pull phi4:mini  # 只需 ~2GB
+   ```
 
 ### Q3: macOS 上运行慢？
 
-**原因：** Apple Silicon 使用 CPU+GPU 统一内存
-
 **解决方案：**
 
-1. 使用 Metal 加速（Ollama 自动支持）
+1. 确保 Metal 加速已启用（Ollama 自动支持）
 2. 关闭其他占用内存的应用
 3. 使用更小的模型
 
@@ -367,15 +401,15 @@ CUDA out of memory
 # 查看正在运行的模型
 ollama ps
 
-# 查看详细信息
-ollama show 模型名称
+# 查看模型详细信息
+ollama show qwen3:4b
 ```
 
 ### Q5: 如何更新模型？
 
 ```bash
-# 重新 pull 即可更新
-ollama pull qwen2.5:7b
+# 重新 pull 即可更新到最新版
+ollama pull qwen3:4b
 ```
 
 ### Q6: ResumeAI 找不到 Ollama？
@@ -394,23 +428,17 @@ ollama pull qwen2.5:7b
    - Windows: 允许 Ollama 通过防火墙
    - macOS: 系统偏好设置 → 安全性与隐私
 
-### Q7: 如何卸载 Ollama？
+### Q7: 如何选择适合自己的模型？
 
-**Windows:**
-- 控制面板 → 程序与功能 → 卸载 Ollama
+**快速选择指南：**
 
-**macOS:**
-- 删除 Applications 中的 Ollama
-- 删除模型文件：
-  ```bash
-  rm -rf ~/.ollama
-  ```
-
-**Linux:**
-```bash
-rm -rf /usr/local/bin/ollama
-rm -rf ~/.ollama
-```
+| 你的显卡 | 推荐模型 | 一句话评价 |
+|----------|----------|------------|
+| RTX 3050/4050 (6GB) | `qwen3:1.7b` | 够用，速度快 |
+| RTX 3060/4060 (8GB) | `qwen3:4b` | ⭐ 性价比最高 |
+| RTX 3070/4070 (12GB) | `qwen3:8b` | 能力强，推荐 |
+| RTX 3080/4080 (16GB) | `qwen3:14b` | 高质量输出 |
+| RTX 3090/4090 (24GB) | `qwen3:30b-q4` | 接近 GPT-4 |
 
 ---
 
@@ -420,8 +448,8 @@ rm -rf ~/.ollama
 
 - [ ] 安装 Ollama 成功（`ollama --version`）
 - [ ] 显卡检测完成（`nvidia-smi`）
-- [ ] 下载至少一个模型（`ollama pull qwen2.5:7b`）
-- [ ] 测试模型运行（`ollama run qwen2.5:7b`）
+- [ ] 下载至少一个模型（`ollama pull qwen3:4b`）
+- [ ] 测试模型运行（`ollama run qwen3:4b`）
 - [ ] ResumeAI 设置中添加 Ollama 提供商
 - [ ] 测试连接成功
 - [ ] 尝试简历导入功能
@@ -431,7 +459,9 @@ rm -rf ~/.ollama
 ## 📚 更多资源
 
 - [Ollama 官方文档](https://github.com/ollama/ollama)
-- [Ollama 模型库](https://ollama.com/library)
+- [Ollama 模型库](https://ollama.com/library) - 查看所有可用模型
+- [Qwen3 官方文档](https://qwenlm.github.io/)
+- [DeepSeek R1 介绍](https://www.deepseek.com/)
 - [ResumeAI 使用指南](./README.md)
 
 ---
