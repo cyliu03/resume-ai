@@ -39,8 +39,18 @@ export class AlibabaProvider extends BaseProvider {
       model = isCodingPlan ? 'qwen3.5-plus' : 'qwen-plus';
     }
 
+    // 本地开发时使用代理（绕过 CORS）
+    let apiUrl = `${this.baseUrl}/chat/completions`;
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      if (isCodingPlan) {
+        apiUrl = '/api/coding-dashscope/chat/completions';
+      } else if (this.baseUrl.includes('dashscope.aliyuncs.com')) {
+        apiUrl = '/api/dashscope/chat/completions';
+      }
+    }
+
     try {
-      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
