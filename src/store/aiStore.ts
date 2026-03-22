@@ -304,9 +304,9 @@ export const useAIStore = create<AIStore>((set, get) => ({
   getActiveProvider: () => {
     const { providers, defaultProvider } = get();
     if (!defaultProvider) {
-      return providers.find((p) => p.isActive) || providers[0] || null;
+      return providers[0] || null;
     }
-    return providers.find((p) => p.provider === defaultProvider && p.isActive) || null;
+    return providers.find((p) => p.provider === defaultProvider) || providers[0] || null;
   },
 
   getDecryptedApiKey: (id) => {
