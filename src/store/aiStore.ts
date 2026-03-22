@@ -140,27 +140,32 @@ export const useAIStore = create<AIStore>((set, get) => ({
   init: async () => {
     if (get().isInitialized) return;
 
-    const providers = await loadConfig<APIKeyConfig[]>(KEYS.providers);
-    const history = await loadConfig<AICallHistory[]>(KEYS.history);
-    const stats = await loadConfig<CostStats>(KEYS.stats);
-    const defaultProvider = await loadConfig<string>(KEYS.defaultProvider);
-    const defaultModel = await loadConfig<string>(KEYS.defaultModel);
+    try {
+      const providers = await loadConfig<APIKeyConfig[]>(KEYS.providers);
+      const history = await loadConfig<AICallHistory[]>(KEYS.history);
+      const stats = await loadConfig<CostStats>(KEYS.stats);
+      const defaultProvider = await loadConfig<string>(KEYS.defaultProvider);
+      const defaultModel = await loadConfig<string>(KEYS.defaultModel);
 
-    // 解密 API Keys
-    const decryptedProviders = (providers || []).map((p) => ({
-      ...p,
-      apiKey: decryptApiKey(p.apiKey),
-    }));
+      // 解密 API Keys
+      const decryptedProviders = (providers || []).map((p) => ({
+        ...p,
+        apiKey: decryptApiKey(p.apiKey),
+      }));
 
-    set({
-      providers: decryptedProviders,
-      history: history || [],
-      stats: stats || defaultStats,
-      defaultProvider: defaultProvider as AIProviderType | null,
-      defaultModel,
-      isLoading: false,
-      isInitialized: true,
-    });
+      set({
+        providers: decryptedProviders,
+        history: history || [],
+        stats: stats || defaultStats,
+        defaultProvider: defaultProvider as AIProviderType | null,
+        defaultModel,
+        isLoading: false,
+        isInitialized: true,
+      });
+    } catch (error) {
+      console.error('Failed to init AI store:', error);
+      set({ isLoading: false, isInitialized: true });
+    }
   },
 
   addProvider: (config) => {

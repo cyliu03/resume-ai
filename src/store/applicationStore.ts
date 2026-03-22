@@ -1,30 +1,17 @@
 import { create } from 'zustand';
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import { v4 as uuidv4 } from 'uuid';
-import type { Application, ApplicationStatus, ApplicationStats, InterviewRecord, TestRecord } from '../types/application';
+import type { Application, ApplicationStatus, InterviewRecord, TestRecord, ApplicationStats } from '../types/application';
 
-// IndexedDB Schema
 interface ApplicationDB extends DBSchema {
   applications: {
     key: string;
     value: Application;
-    indexes: { 'by-status': ApplicationStatus; 'by-company': string };
+    indexes: {
+      'by-status': ApplicationStatus;
+      'by-company': string;
+    };
   };
-}
-
-const DB_NAME = 'resume-ai-applications';
-const DB_VERSION = 1;
-
-async function initDB(): Promise<IDBPDatabase<ApplicationDB>> {
-  return openDB<ApplicationDB>(DB_NAME, DB_VERSION, {
-    upgrade(db) {
-      if (!db.objectStoreNames.contains('applications')) {
-        const store = db.createObjectStore('applications', { keyPath: 'id' });
-        store.createIndex('by-status', 'status');
-        store.createIndex('by-company', 'company');
-      }
-    },
-  });
 }
 
 interface ApplicationStore {
@@ -42,6 +29,21 @@ interface ApplicationStore {
   getStats: () => ApplicationStats;
 }
 
+const DB_NAME = 'resume-ai-applications';
+const DB_VERSION = 1;
+
+async function initDB(): Promise<IDBPDatabase<ApplicationDB>> {
+  return openDB<ApplicationDB>(DB_NAME, DB_VERSION, {
+    upgrade(db) {
+      if (!db.objectStoreNames.contains('applications')) {
+        const store = db.createObjectStore('applications', { keyPath: 'id' });
+        store.createIndex('by-status', 'status');
+        store.createIndex('by-company', 'company');
+      }
+    },
+  });
+}
+
 export const useApplicationStore = create<ApplicationStore>((set, get) => ({
   applications: [],
   isLoading: false,
@@ -55,6 +57,7 @@ export const useApplicationStore = create<ApplicationStore>((set, get) => ({
       set({ applications: apps, isInitialized: true });
     } catch (error) {
       console.error('Failed to init applications:', error);
+      set({ isInitialized: true });
     } finally {
       set({ isLoading: false });
     }
@@ -66,14 +69,21 @@ export const useApplicationStore = create<ApplicationStore>((set, get) => ({
     const app: Application = {
       ...appData,
       id,
+      interviews: [],
+      tests: [],
       createdAt: now,
       lastUpdated: now,
     };
 
-    const db = await initDB();
-    await db.put('applications', app);
-    set((state) => ({ applications: [...state.applications, app] }));
-    return id;
+    try {
+      const db = await initDB();
+      await db.add('applications', app);
+      set((state) => ({ applications: [...state.applications, app] }));
+      return id;
+    } catch (error) {
+      console.error('Failed to add application:', error);
+      return id;
+    }
   },
 
   updateApplication: async (id, updates) => {
@@ -86,27 +96,33 @@ export const useApplicationStore = create<ApplicationStore>((set, get) => ({
       lastUpdated: new Date().toISOString(),
     };
 
-    const db = await initDB();
-    await db.put('applications', updatedApp);
-    set((state) => ({
-      applications: state.applications.map((a) => (a.id === id ? updatedApp : a)),
-    }));
+    try {
+      const db = await initDB();
+      await db.put('applications', updatedApp);
+      set((state) => ({
+        applications: state.applications.map((a) =>
+          a.id === id ? updatedApp : a
+        ),
+      }));
+    } catch (error) {
+      console.error('Failed to update application:', error);
+    }
   },
 
   removeApplication: async (id) => {
-    const db = await initDB();
-    await db.delete('applications', id);
-    set((state) => ({
-      applications: state.applications.filter((a) => a.id !== id),
-    }));
+    try {
+      const db = await initDB();
+      await db.delete('applications', id);
+      set((state) => ({
+        applications: state.applications.filter((a) => a.id !== id),
+      }));
+    } catch (error) {
+      console.error('Failed to remove application:', error);
+    }
   },
 
   updateStatus: async (id, status) => {
-    const updates: Partial<Application> = { status };
-    if (status === 'submitted') {
-      updates.submittedAt = new Date().toISOString();
-    }
-    await get().updateApplication(id, updates);
+    await get().updateApplication(id, { status });
   },
 
   addInterview: async (appId, interviewData) => {
@@ -157,15 +173,11 @@ export const useApplicationStore = create<ApplicationStore>((set, get) => ({
       stats.byStatus[app.status]++;
     });
 
-    if (apps.length > 0) {
-      const submitted = stats.byStatus.submitted + stats.byStatus.screening + stats.byStatus.interview + stats.byStatus.offer + stats.byStatus.rejected;
-      const gotResponse = stats.byStatus.screening + stats.byStatus.interview + stats.byStatus.offer + stats.byStatus.rejected;
-      const gotInterview = stats.byStatus.interview + stats.byStatus.offer;
-      const gotOffer = stats.byStatus.offer;
-
-      stats.responseRate = submitted > 0 ? gotResponse / submitted : 0;
-      stats.interviewRate = gotResponse > 0 ? gotInterview / gotResponse : 0;
-      stats.offerRate = gotInterview > 0 ? gotOffer / gotInterview : 0;
+    const submitted = stats.byStatus.submitted + stats.byStatus.screening + stats.byStatus.interview + stats.byStatus.offer + stats.byStatus.rejected;
+    if (submitted > 0) {
+      stats.responseRate = (stats.byStatus.screening + stats.byStatus.interview + stats.byStatus.offer) / submitted;
+      stats.interviewRate = (stats.byStatus.interview + stats.byStatus.offer) / submitted;
+      stats.offerRate = stats.byStatus.offer / submitted;
     }
 
     return stats;
