@@ -13,7 +13,9 @@ export class AlibabaProvider extends BaseProvider {
   }
 
   async chat(messages: ChatMessage[], options?: GenerateOptions): Promise<GenerateResult> {
-    const model = 'qwen-plus';
+    // Coding Plan 需要使用 qwen3-coder-plus，普通通义千问使用 qwen-plus
+    const isCodingPlan = this.baseUrl.includes('coding.dashscope');
+    const model = isCodingPlan ? 'qwen3-coder-plus' : 'qwen-plus';
 
     try {
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
