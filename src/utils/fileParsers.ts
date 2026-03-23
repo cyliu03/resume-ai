@@ -2,8 +2,8 @@ import * as pdfjsLib from 'pdfjs-dist';
 import mammoth from 'mammoth';
 import type { ResumeData, ExportData } from '../types/resume';
 
-// 设置 PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// 设置 PDF.js worker - 使用 public 目录中的本地 worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 // 解析 PDF 文件
 export async function parsePDF(file: File): Promise<string> {
