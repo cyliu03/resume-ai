@@ -199,17 +199,20 @@ export const useAIStore = create<AIStore>((set, get) => ({
       const newProviders = state.providers.map((p) => {
         if (p.id !== id) return p;
         const updated = { ...p, ...config };
-        if (config.apiKey) {
+        // 只有当 apiKey 真正改变时才加密
+        if (config.apiKey && config.apiKey !== p.apiKey) {
           updated.apiKey = encryptApiKey(config.apiKey);
         }
         return updated;
       });
 
+      // 保存到 IndexedDB（加密状态）
       saveConfig(KEYS.providers, newProviders.map(p => ({
         ...p,
         apiKey: encryptApiKey(p.apiKey),
       })));
 
+      // 返回解密后的状态给前端使用
       return {
         providers: newProviders.map(p => ({
           ...p,
@@ -304,9 +307,20 @@ export const useAIStore = create<AIStore>((set, get) => ({
   getActiveProvider: () => {
     const { providers, defaultProvider } = get();
     if (!defaultProvider) {
-      return providers[0] || null;
+      const provider = providers[0];
+      if (!provider) return null;
+      // 确保 API Key 是解密状态
+      return {
+        ...provider,
+        apiKey: decryptApiKey(provider.apiKey),
+      };
     }
-    return providers.find((p) => p.provider === defaultProvider) || providers[0] || null;
+    const provider = providers.find((p) => p.provider === defaultProvider) || providers[0];
+    if (!provider) return null;
+    return {
+      ...provider,
+      apiKey: decryptApiKey(provider.apiKey),
+    };
   },
 
   getDecryptedApiKey: (id) => {
