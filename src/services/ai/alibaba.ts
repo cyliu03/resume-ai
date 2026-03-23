@@ -39,34 +39,58 @@ export class AlibabaProvider extends BaseProvider {
       model = isCodingPlan ? 'qwen3.5-plus' : 'qwen-plus';
     }
 
-    // 本地开发时使用代理（绕过 CORS）
-    let apiUrl = `${this.baseUrl}/chat/completions`;
-    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    // 使用代理绕过 CORS
+    // 本地开发用 Vite 代理，生产环境用 Vercel Serverless Function
+    let apiUrl: string;
+    const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+    
+    if (isLocalhost) {
+      // 本地开发：使用 Vite 代理
       if (isCodingPlan) {
         apiUrl = '/api/coding-dashscope/chat/completions';
       } else if (this.baseUrl.includes('dashscope.aliyuncs.com')) {
         apiUrl = '/api/dashscope/chat/completions';
+      } else {
+        apiUrl = `${this.baseUrl}/chat/completions`;
       }
+    } else {
+      // 生产环境：使用 Vercel Serverless Function 代理
+      apiUrl = '/api/chat';
     }
 
     try {
+      // 构建请求体
+      const requestBody: Record<string, unknown> = {
+        model,
+        messages: messages.map((m) => ({
+          role: m.role,
+          content: m.content,
+        })),
+        temperature: options?.temperature ?? 0.7,
+        max_tokens: options?.maxTokens,
+        top_p: options?.topP,
+        stop: options?.stop,
+      };
+
+      // 生产环境代理需要额外的认证信息
+      if (!isLocalhost) {
+        requestBody.apiKey = this.apiKey;
+        requestBody.baseUrl = this.baseUrl;
+      }
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      // 本地开发时直接传递 Authorization
+      if (isLocalhost) {
+        headers['Authorization'] = `Bearer ${this.apiKey}`;
+      }
+
       const response = await fetch(apiUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.apiKey}`,
-        },
-        body: JSON.stringify({
-          model,
-          messages: messages.map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
-          temperature: options?.temperature ?? 0.7,
-          max_tokens: options?.maxTokens,
-          top_p: options?.topP,
-          stop: options?.stop,
-        }),
+        headers,
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
