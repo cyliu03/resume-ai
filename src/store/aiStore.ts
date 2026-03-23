@@ -20,7 +20,7 @@ interface AIConfigDB extends DBSchema {
 }
 
 const DB_NAME = 'resume-ai-config';
-const DB_VERSION = 2;  // 升级版本号，强制重建数据库
+const DB_VERSION = 3;  // 升级版本号，强制重建数据库
 const KEYS = {
   providers: 'providers',
   history: 'history',
@@ -34,7 +34,7 @@ async function initDB(): Promise<IDBPDatabase<AIConfigDB>> {
   return openDB<AIConfigDB>(DB_NAME, DB_VERSION, {
     upgrade(db, oldVersion) {
       // 版本升级时重建 object store
-      if (oldVersion < 2) {
+      if (oldVersion < 3) {
         // 删除旧的 object store（如果存在）
         if (db.objectStoreNames.contains('ai-config')) {
           db.deleteObjectStore('ai-config');
@@ -51,15 +51,31 @@ async function initDB(): Promise<IDBPDatabase<AIConfigDB>> {
 // 简单的 API Key 加密（基于浏览器环境）
 function encryptApiKey(apiKey: string): string {
   // 使用 Base64 编码作为简单加密
-  // 生产环境应使用更安全的加密方式
   return btoa(apiKey);
 }
 
 function decryptApiKey(encrypted: string): string {
   try {
-    return atob(encrypted);
-  } catch {
+    // 如果解密后看起来像 API Key（以 sk- 开头），说明解密成功
+    const decrypted = atob(encrypted);
+    if (decrypted.startsWith('sk-')) {
+      return decrypted;
+    }
+    // 否则可能本身就是明文
     return encrypted;
+  } catch {
+    // 解密失败，可能是明文
+    return encrypted;
+  }
+}
+
+// 检查是否已加密
+function isEncrypted(apiKey: string): boolean {
+  try {
+    const decrypted = atob(apiKey);
+    return decrypted.startsWith('sk-');
+  } catch {
+    return false;
   }
 }
 
@@ -147,10 +163,10 @@ export const useAIStore = create<AIStore>((set, get) => ({
       const defaultProvider = await loadConfig<string>(KEYS.defaultProvider);
       const defaultModel = await loadConfig<string>(KEYS.defaultModel);
 
-      // 解密 API Keys
+      // 解密 API Keys - 内存中始终保存明文
       const decryptedProviders = (providers || []).map((p) => ({
         ...p,
-        apiKey: decryptApiKey(p.apiKey),
+        apiKey: isEncrypted(p.apiKey) ? decryptApiKey(p.apiKey) : p.apiKey,
       }));
 
       set({
@@ -170,24 +186,24 @@ export const useAIStore = create<AIStore>((set, get) => ({
 
   addProvider: (config) => {
     set((state) => {
+      // 内存中保存明文
       const newProvider: APIKeyConfig = {
         ...config,
         id: uuidv4(),
-        apiKey: encryptApiKey(config.apiKey),
+        apiKey: config.apiKey,  // 明文保存
         createdAt: new Date().toISOString(),
       };
 
       const newProviders = [...state.providers, newProvider];
+      
+      // 保存到 IndexedDB 时加密
       saveConfig(KEYS.providers, newProviders.map(p => ({
         ...p,
-        apiKey: p.id === newProvider.id ? newProvider.apiKey : p.apiKey,
+        apiKey: encryptApiKey(p.apiKey),
       })));
 
       return {
-        providers: newProviders.map(p => ({
-          ...p,
-          apiKey: p.id === newProvider.id ? config.apiKey : p.apiKey,
-        })),
+        providers: newProviders,
         defaultProvider: state.defaultProvider || config.provider,
         defaultModel: state.defaultModel || null,
       };
@@ -196,35 +212,27 @@ export const useAIStore = create<AIStore>((set, get) => ({
 
   updateProvider: (id, config) => {
     set((state) => {
+      // 内存中保存明文
       const newProviders = state.providers.map((p) => {
         if (p.id !== id) return p;
-        const updated = { ...p, ...config };
-        // 只有当 apiKey 真正改变时才加密
-        if (config.apiKey && config.apiKey !== p.apiKey) {
-          updated.apiKey = encryptApiKey(config.apiKey);
-        }
-        return updated;
+        return { ...p, ...config };  // apiKey 直接使用传入的明文
       });
 
-      // 保存到 IndexedDB（加密状态）
+      // 保存到 IndexedDB 时加密
       saveConfig(KEYS.providers, newProviders.map(p => ({
         ...p,
         apiKey: encryptApiKey(p.apiKey),
       })));
 
-      // 返回解密后的状态给前端使用
-      return {
-        providers: newProviders.map(p => ({
-          ...p,
-          apiKey: decryptApiKey(p.apiKey),
-        })),
-      };
+      return { providers: newProviders };
     });
   },
 
   removeProvider: (id) => {
     set((state) => {
       const newProviders = state.providers.filter((p) => p.id !== id);
+      
+      // 保存到 IndexedDB 时加密
       saveConfig(KEYS.providers, newProviders.map(p => ({
         ...p,
         apiKey: encryptApiKey(p.apiKey),
@@ -252,13 +260,12 @@ export const useAIStore = create<AIStore>((set, get) => ({
         createdAt: new Date().toISOString(),
       };
 
-      const newHistory = [newRecord, ...state.history].slice(0, 1000); // 保留最近 1000 条
+      const newHistory = [newRecord, ...state.history].slice(0, 1000);
       saveConfig(KEYS.history, newHistory);
 
       return { history: newHistory };
     });
 
-    // 更新统计
     get().updateStats(get().history[0]);
   },
 
@@ -307,20 +314,9 @@ export const useAIStore = create<AIStore>((set, get) => ({
   getActiveProvider: () => {
     const { providers, defaultProvider } = get();
     if (!defaultProvider) {
-      const provider = providers[0];
-      if (!provider) return null;
-      // 确保 API Key 是解密状态
-      return {
-        ...provider,
-        apiKey: decryptApiKey(provider.apiKey),
-      };
+      return providers[0] || null;
     }
-    const provider = providers.find((p) => p.provider === defaultProvider) || providers[0];
-    if (!provider) return null;
-    return {
-      ...provider,
-      apiKey: decryptApiKey(provider.apiKey),
-    };
+    return providers.find((p) => p.provider === defaultProvider) || providers[0] || null;
   },
 
   getDecryptedApiKey: (id) => {
